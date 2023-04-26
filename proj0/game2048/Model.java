@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author 张景耀
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -114,10 +114,72 @@ public class Model extends Observable {
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
 
+        this.board.setViewingPerspective(side);
+
+
+        int n = this.board.size();
+
+//        boolean sthChanged = false;
+//
+//        boolean[][] canChange = new boolean[n][n];
+//        for (int i = 0; i < n; i++) {
+//            for (int j = 0; j < n; j++) {
+//                canChange[i][j] = true;
+//            }
+//        }
+
+        for (int r = 3; r > 0; r--) {
+            for (int c = 0; c < n; c++) {
+
+                // [c, r] is a null tile
+                if (this.board.tile(c, r) == null) {
+
+                    // find a non-null tile and move it to the space
+                    for (int i = r - 1; i >= 0; i--) {
+                        if (this.board.tile(c, i) != null) {
+                            this.board.move(c, r, this.board.tile(c, i));
+                            changed = true;
+
+                            // it still can merge another tile
+                            for (int j = i - 1; j >= 0; j--) {
+                                if (this.board.tile(c, j) != null) {
+                                    if (this.board.tile(c, r).value() == this.board.tile(c, j).value()) {
+                                        this.board.move(c, r, this.board.tile(c, j));
+                                        changed = true;
+                                        this.score += this.board.tile(c, r).value();
+                                    }
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                } else {
+                    // [c, r] isn't a null tile
+                    for (int i = r - 1; i >= 0; i--) {
+                        if (this.board.tile(c, i) != null) {
+                            if (this.board.tile(c, r).value() == this.board.tile(c, i).value()) {
+                                this.board.move(c, r, this.board.tile(c, i));
+                                changed = true;
+                                this.score += this.board.tile(c, r).value();
+                            }
+                            break;
+                        }
+                    }
+                }
+
+
+
+            }
+        }
+
+
         checkGameOver();
         if (changed) {
             setChanged();
         }
+
+        this.board.setViewingPerspective(Side.NORTH);
         return changed;
     }
 
@@ -137,7 +199,15 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        // TODO: Fill in this function.
+        int n = b.size();
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (b.tile(i, j) == null) {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
@@ -147,7 +217,15 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+        int n = b.size();
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (b.tile(i, j) != null && b.tile(i, j).value() == MAX_PIECE) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -158,7 +236,35 @@ public class Model extends Observable {
      * 2. There are two adjacent tiles with the same value.
      */
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
+        int n = b.size();
+
+        // If there're at least one null tile, then return true
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (b.tile(i, j) == null) {
+                    return true;
+                }
+            }
+        }
+
+        // If there're at least one pair of adjacent tiles that share the same value, return true
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n - 1; j++) {
+                if (b.tile(i, j).value() == b.tile(i, j + 1).value()) {
+                    return true;
+                }
+            }
+        }
+
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = 0; j < n; j++) {
+                if (b.tile(i, j).value() == b.tile(i + 1, j).value()) {
+                    return true;
+                }
+            }
+        }
+
+
         return false;
     }
 
